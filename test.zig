@@ -24,6 +24,7 @@ const snudown_default_md_flags = 0
     | c.MKDEXT_AUTOLINK
     | c.MKDEXT_STRIKETHROUGH
     | c.MKDEXT_TABLES
+    | c.MKDEXT_FENCED_CODE
 ;
 // zig fmt: on
 

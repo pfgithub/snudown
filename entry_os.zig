@@ -155,6 +155,8 @@ test "post markdown" {
         .{ "Inline >!spoiler with *emphasis*!< test", "<p>Inline <span class=\"md-spoiler-text\">spoiler with <em>emphasis</em></span> test</p>\n" },
         .{ ">! This is an illegal blockspoiler >!with an inline spoiler!<", "<p>&gt;! This is an illegal blockspoiler <span class=\"md-spoiler-text\">with an inline spoiler</span></p>\n" },
         .{ "This is an >!inline spoiler with some >!additional!< text!<", "<p>This is an <span class=\"md-spoiler-text\">inline spoiler with some &gt;!additional</span> text!&lt;</p>\n" },
+        .{ "```\nhello, world!\n```", "<pre><code>hello, world!\n</code></pre>\n" },
+        .{ "```javascript\nimport leftpad from \"left-pad\";\n```", "<pre><code class=\"md-code-language-javascript\">import leftpad from &quot;left-pad&quot;;\n</code></pre>\n" },
     }) |item| {
         const html = parse(alloc, item[0]);
         defer alloc.free(html);

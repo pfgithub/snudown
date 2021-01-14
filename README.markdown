@@ -6,6 +6,10 @@ zig test entry_os.zig -lc -Isrc -Ihtml -cflags -fno-sanitize=undefined -- src/*.
 zig build-lib -target wasm32-freestanding entry_wasm.zig -lc -Isrc -Ihtml -cflags -fno-sanitize=undefined -- src/*.c html/*.c printf.c
 ```
 
+Also adds some features from new.reddit markdown parsing
+
+- adds code fence support
+
 # Snudown
 
 `Snudown` is a reddit-specific fork of the [Sundown](http://github.com/vmg/sundown)
