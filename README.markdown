@@ -1,33 +1,33 @@
-﻿Snudown
-=======
+﻿snudown fork for wasm
+
+```
+zig test entry_os.zig -lc -Isrc -Ihtml -cflags -fno-sanitize=undefined -- src/*.c html/*.c
+
+zig build-lib -target wasm32-freestanding entry_wasm.zig -lc -Isrc -Ihtml -cflags -fno-sanitize=undefined -- src/*.c html/*.c printf.c
+```
+
+# Snudown
 
 `Snudown` is a reddit-specific fork of the [Sundown](http://github.com/vmg/sundown)
 Markdown parser used by GitHub, with Python integration added.
 
-
-Install
--------
+## Install
 
 Run `setup.py install` to install the module.
 
-
-Setup for development on Mac OS X
----------------------------------
+## Setup for development on Mac OS X
 
 For Mac OS X:
+
 1. Install `afl-fuzz` via homebrew: `brew install afl-fuzz`
-3. You can now install the module via `python setup.py install`
-4. You may also compile snudown using the Makefile directly if you so wish
+2. You can now install the module via `python setup.py install`
+3. You may also compile snudown using the Makefile directly if you so wish
 
-
-Thanks
-------
+## Thanks
 
 Many thanks to @vmg for implementing the initial version of this fork!
 
-
-License
--------
+## License
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above

@@ -8,3 +8,5 @@ snudown.egg-info/
 /fuzzing/bin
 /fuzzing/testing
 zig-cache/
+
+*.wasm

@@ -94,9 +94,8 @@ smartypants_quotes(struct buf *ob, uint8_t previous_char, uint8_t next_char, uin
 	if (!(*is_open) && !word_boundary(previous_char))
 		return 0;
 
-	snprintf(ent, sizeof(ent), "&%c%cquo;", (*is_open) ? 'r' : 'l', quote);
+	bufprintf(ob, "&%c%cquo;", (*is_open) ? 'r' : 'l', quote);
 	*is_open = !(*is_open);
-	bufputs(ob, ent);
 	return 1;
 }
 
