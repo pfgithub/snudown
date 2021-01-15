@@ -20,6 +20,7 @@ test "post markdown" {
     const alloc = std.testing.allocator;
     inline for (.{
         .{ "", "" },
+        .{ " ", "" },
         .{ "http://www.reddit.com", "<p><a href=\"http://www.reddit.com\">http://www.reddit.com</a></p>\n" },
         .{ "http://www.reddit.com/a\x00b", "<p><a href=\"http://www.reddit.com/ab\">http://www.reddit.com/ab</a></p>\n" },
         .{ "foo@example.com", "<p><a href=\"mailto:foo@example.com\">foo@example.com</a></p>\n" },

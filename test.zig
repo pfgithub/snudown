@@ -56,31 +56,25 @@ pub fn parse(alloc: *std.mem.Allocator, inmd: [:0]const u8) [:0]u8 {
 
     c.sd_markdown_render(ob, inmd.ptr, inmd.len, parser);
 
-    return alloc.dupeZ(u8, if (ob.size == 0) "" else ob.data[0..ob.size]) catch @panic("oom");
-}
+    const dupeval = if (ob.size == 0) "" else ob.data[0..ob.size];
 
-export fn freeText(ptr: [*]u8, len: usize) void {
-    std.heap.page_allocator.free(ptr[0..len]);
+    const res = alloc.dupeZ(u8, dupeval) catch @panic("oom");
+    debugprint("Reached {}", .{@src().line});
+    return res;
 }
 
 extern fn debugprints(str: [*]const u8, len: usize) callconv(.C) void;
-pub extern fn debugpanic() callconv(.C) noreturn;
-usingnamespace struct {
-    export fn debugprint(str: [*:0]const u8) void {
-        debugprints(str, std.mem.span(str).len);
-    }
-};
-
-pub fn debugprint(comptime fmt: []const u8, args: anytype) void {
-    const alloc = std.heap.page_allocator;
-    const str = std.fmt.allocPrint(alloc, fmt, args) catch @panic("oom");
-    defer alloc.free(str);
-    debugprints(str.ptr, str.len);
+pub extern fn debugpanic(str: [*]const u8, len: usize) callconv(.C) noreturn;
+comptime {
+    _ = struct {
+        export fn debugprint(str: [*:0]const u8) void {
+            debugprints(str, std.mem.span(str).len);
+        }
+    };
 }
 
-// pub fn main() !void {
-//     const alloc = std.heap.page_allocator;
-//     const ob = parse(alloc, "Test!");
-//     defer alloc.free(ob);
-//     std.debug.warn("res: {s}", .{ob});
-// }
+pub fn debugprint(comptime fmt: []const u8, args: anytype) void {
+    var print_buf = [_]u8{0} ** 200;
+    const str = std.fmt.bufPrint(&print_buf, fmt, args) catch @panic("print too long");
+    debugprints(str.ptr, str.len);
+}

@@ -11,6 +11,7 @@
         const dec = new TextDecoder();
         const tests = [
             ["", ""],
+            [" ", ""],
             ["http://www.reddit.com", "<p><a href=\"http://www.reddit.com\">http://www.reddit.com</a></p>\n"],
             ["http://www.reddit.com/a\x00b", "<p><a href=\"http://www.reddit.com/ab\">http://www.reddit.com/ab</a></p>\n"],
             ["foo@example.com", "<p><a href=\"mailto:foo@example.com\">foo@example.com</a></p>\n"],
@@ -201,8 +202,8 @@
                 debugprintc: (intv) => {
                     console.log("print char:", String.fromCodePoint(intv));
                 },
-                debugpanic: () => {
-                    throw new Error("panic'd");
+                debugpanic: (text, len) => {
+                    throw new Error("Panic: "+ dec.decode(new Uint8Array(gmem.buffer, text, len)));
                 }
             },
         }).then(obj => {
@@ -222,19 +223,27 @@
                     return decoded;
                 }catch(e){
                     console.log(e.toString() + "\n" + e.stack);
-                    return "Error "+e;
+                    return "Error "+e.toString()+"\n"+e.stack;
                 }
             };
 
             let testsfailed = 0;
             tests.forEach(([testin, testout], i) => {
-                testels[i].progressi.nodeValue = "…";
-                testels[i].actualout.nodeValue = "…Running…";
-                // console.log("Testing", {testin, testout});
-                const got = markdownToHTML(testin);
-                testels[i].actualout.nodeValue = got;
+                let got1;
+                let got2;
+                if(true) {
+                    testels[i].progressi.nodeValue = "…";
+                    testels[i].actualout.nodeValue = "…Running…";
+                    // console.log("Testing", {testin, testout});
+                    got1 = markdownToHTML(testin);
+                    got2 = markdownToHTML(testin);
+                }else{
+                    got1 = "Not Run Yet";
+                    got2 = "Not Run Yet";
+                }
+                testels[i].actualout.nodeValue = got1;
                 testels[i].progressi.nodeValue = "✓";
-                if(testout !== got) {
+                if(testout !== got1 || testout !== got2) {
                     testels[i].progressi.nodeValue = "✗";
                     testels[i].testel.open = true;
                     el("button").atxt("⟳ Retry").adto(testels[i].summary.atxt(" ")).onev("click", () => {
@@ -242,13 +251,14 @@
                         console.log("Test failed", [testin, testout, got]);
                     });
                     testsfailed++;
+                    // throw new Error("stop");
                 }
             })
             if(testsfailed > 0) finalres.atxt("Failed "+testsfailed+" test(s)");
             console.clear();
 
         }).catch(e => {
-            console.log(e);
+            console.log(e.toString(), e.stack);
         });
     </script>
 </body>

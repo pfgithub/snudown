@@ -181,11 +181,16 @@ test "strncmp" {
 // }
 
 export fn memset(dest: ?[*]u8, c: u8, n: usize) callconv(.C) ?[*]u8 {
+    // @import("test.zig").debugprint("Called memset on {}[0..{}] = {}", .{ dest, n, c });
     @setRuntimeSafety(false);
 
     var index: usize = 0;
-    while (index != n) : (index += 1)
+    while (index != n) : (index += 1) {
+        // @import("test.zig").debugprint("Memset at index {}", .{index});
         dest.?[index] = c;
+        // @import("test.zig").debugprint("Memset completed index {}", .{index});
+    }
+    // @import("test.zig").debugprint("Memset completed with index {}", .{index});
 
     return dest;
 }

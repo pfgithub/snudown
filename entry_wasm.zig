@@ -53,49 +53,72 @@ export fn strtol(str: [*:0]const u8, eptr: ?*[*:0]const u8, basev: c_int) c_long
 
 // }
 
+// var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var arena: ?std.heap.ArenaAllocator = null;
+fn getAlloc() *std.mem.Allocator {
+    // return &gpa.allocator;
+    if (arena == null) arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    return &arena.?.allocator;
+}
+
 const MallocHeader = struct {
     magic: usize = 0xABCDEF,
     size: usize,
+    comptime {
+        if (@alignOf(MallocHeader) != @alignOf(c_int)) @compileError("oops");
+    }
 };
-export fn malloc(size: usize) ?[*]u8 {
-    const res = std.heap.page_allocator.alloc(u8, size + @sizeOf(MallocHeader)) catch return null;
-    const mloc_h = @intToPtr(*MallocHeader, @ptrToInt(res.ptr));
+export fn malloc(size: usize) ?[*]align(@alignOf(c_int)) u8 {
+    const alloc = getAlloc();
+    const res = alloc.allocWithOptions(u8, size + @sizeOf(MallocHeader), @alignOf(c_int), null) catch return null;
+    const mloc_h = @ptrCast(*MallocHeader, res.ptr);
     mloc_h.* = .{ .size = size };
     return res.ptr + @sizeOf(MallocHeader);
 }
-export fn calloc(num: usize, sizev: usize) ?[*]u8 {
+export fn calloc(num: usize, sizev: usize) ?[*]align(@alignOf(c_int)) u8 {
+    const alloc = getAlloc();
     const size = num * sizev;
-    const res = std.heap.page_allocator.alloc(u8, size + @sizeOf(MallocHeader)) catch return null;
+    const res = alloc.allocWithOptions(u8, size + @sizeOf(MallocHeader), @alignOf(c_int), null) catch return null;
     for (res) |*v| v.* = 0;
-    const mloc_h = @intToPtr(*MallocHeader, @ptrToInt(res.ptr));
+    const mloc_h = @ptrCast(*MallocHeader, res.ptr);
     mloc_h.* = .{ .size = size };
     return res.ptr + @sizeOf(MallocHeader);
 }
-export fn realloc(ptr_opt: ?[*]u8, size: usize) ?*c_void {
+export fn realloc(ptr_opt: ?[*]align(@alignOf(c_int)) u8, size: usize) ?[*]align(@alignOf(c_int)) u8 {
+    const alloc = getAlloc();
     const ptr = ptr_opt orelse return malloc(size);
 
     const start_ptr = ptr - @sizeOf(MallocHeader);
-    const mloc_h = @intToPtr(*MallocHeader, @ptrToInt(start_ptr));
+    const mloc_h = @ptrCast(*MallocHeader, start_ptr);
     if (mloc_h.magic != 0xABCDEF) @panic("bad malloc header");
+    debugprint("Original malloc header: {x} {x}", .{ mloc_h.magic, mloc_h.size });
+    debugprint("Start ptr: {}. [0]: {}, [1]: {}, [2]: {}", .{ start_ptr, start_ptr[0], start_ptr[1], start_ptr[2] });
 
     const total_area = start_ptr[0 .. mloc_h.size + @sizeOf(MallocHeader)];
-    const realloc_result = std.heap.page_allocator.realloc(total_area, size) catch return null;
+    const realloc_result = alloc.realloc(total_area, size + @sizeOf(MallocHeader)) catch return null;
+    debugprint("Realloc ptr: {}. [0]: {}, [1]: {}, [2]: {}", .{ start_ptr, realloc_result[0], realloc_result[1], realloc_result[2] });
 
-    const new_mloc_h = @intToPtr(*MallocHeader, @ptrToInt(realloc_result.ptr));
+    const new_mloc_h = @ptrCast(*MallocHeader, realloc_result.ptr);
+    debugprint("Copied malloc header: {x} {x}", .{ new_mloc_h.magic, new_mloc_h.size });
     if (new_mloc_h.magic != 0xABCDEF) @panic("bad copied malloc header");
     new_mloc_h.size = size;
 
+    debugprint("reallocating {}[0..{}] → {}[0..{}] :: ", .{ total_area.ptr, total_area.len, realloc_result.ptr, realloc_result.len });
+
     return realloc_result.ptr + @sizeOf(MallocHeader);
 }
-export fn free(ptr_opt: ?[*]u8) void {
+export fn free(ptr_opt: ?[*]align(@alignOf(c_int)) u8) void {
+    const alloc = getAlloc();
+
     const ptr = ptr_opt orelse return;
 
     const start_ptr = ptr - @sizeOf(MallocHeader);
-    const mloc_h = @intToPtr(*MallocHeader, @ptrToInt(start_ptr));
+    const mloc_h = @ptrCast(*MallocHeader, start_ptr);
     if (mloc_h.magic != 0xABCDEF) @panic("bad malloc header");
 
-    const total_area = ptr[0 .. mloc_h.size + @sizeOf(MallocHeader)];
-    return std.heap.page_allocator.free(total_area);
+    const total_area = start_ptr[0 .. mloc_h.size + @sizeOf(MallocHeader)];
+    debugprint("freeing {}[0..{}] :: ", .{ total_area.ptr, total_area.len });
+    alloc.free(total_area);
 }
 
 const va_list = opaque {
@@ -127,12 +150,16 @@ export fn vsnprintf_zig(s: [*:0]u8, n: usize, format_in: [*:0]u8, arg: *va_list)
     return @intCast(c_int, fbs.pos - 1);
 }
 export fn allocString(len: usize) ?[*]u8 {
-    const alloc = std.heap.page_allocator;
+    const alloc = getAlloc();
     const slice = alloc.alloc(u8, len) catch @panic("oom");
     return slice.ptr;
 }
+export fn freeText(ptr: [*]u8, len: usize) void {
+    const alloc = getAlloc();
+    alloc.free(ptr[0..len]);
+}
 export fn markdownToHTML(markdown: [*]u8, markdown_len: usize) [*]u8 {
-    const alloc = std.heap.page_allocator;
+    const alloc = getAlloc();
     const duped = alloc.dupeZ(u8, markdown[0..markdown_len]) catch @panic("oom");
     const ob = parse(alloc, duped);
     return ob.ptr;
@@ -140,7 +167,7 @@ export fn markdownToHTML(markdown: [*]u8, markdown_len: usize) [*]u8 {
 
 pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
     debugprint("Panic! {s}\n", .{msg});
-    debugpanic();
+    debugpanic(msg.ptr, msg.len);
 }
 
 pub export fn main() void {}
