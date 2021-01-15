@@ -19,19 +19,14 @@ Also adds some features from new.reddit markdown parsing
 # Snudown
 
 `Snudown` is a reddit-specific fork of the [Sundown](http://github.com/vmg/sundown)
-Markdown parser used by GitHub, with Python integration added.
+Markdown parser used by GitHub.
 
-## Install
+## Setup
 
-Run `setup.py install` to install the module.
-
-## Setup for development on Mac OS X
-
-For Mac OS X:
-
-1. Install `afl-fuzz` via homebrew: `brew install afl-fuzz`
-2. You can now install the module via `python setup.py install`
-3. You may also compile snudown using the Makefile directly if you so wish
+1. Install the latest master version of zig for your platform from the [downloads page](https://ziglang.org/download/) (this is the only dependency)
+2. Test `zig test entry_os.zig -lc -Isrc -Ihtml -cflags -fno-sanitize=undefined -- src/*.c html/*.c`
+3. Build entry_wasm.wasm `zig build-lib -target wasm32-freestanding entry_wasm.zig -lc -Isrc -Ihtml -cflags -fno-sanitize=undefined -- src/*.c html/*.c printf.c`
+4. Run a local webserver (eg `php -S .` or `serve .` or something) and navigate to `/demo.html` or `/test.html`
 
 ## Thanks
 
