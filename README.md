@@ -22,6 +22,8 @@ Markdown parser used by GitHub.
 3. Build entry_wasm.wasm `zig build -Drelease-small && cp zig-cache/lib/entry_wasm.wasm docs/entry_wasm.wasm`
 4. Run a local webserver (eg `php -S docs` or `serve docs` or something) and navigate to `/demo.html` or `/test.html`
 
+To automatically build on save, use `onchange` (from npm) or something like: `onchange src/\*\*/\* -- fish -c "echo Building… && zig build -Drelease-small && cp zig-cache/lib/entry_wasm.wasm docs/entry_wasm.wasm && echo Finished Building"`
+
 ## Thanks
 
 Many thanks to @vmg for implementing the initial version of this fork!

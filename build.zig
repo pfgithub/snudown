@@ -3,17 +3,17 @@ const Builder = std.build.Builder;
 
 fn addThings(a: anytype) void {
     a.linkLibC();
-    a.addIncludeDir("src");
-    a.addIncludeDir("html");
+    a.addIncludeDir("src/snudown");
+    a.addIncludeDir("src/html");
     inline for (.{
-        "html/houdini_href_e.c",
-        "html/houdini_html_e.c",
-        "html/html.c",
-        "html/html_smartypants.c",
-        "src/autolink.c",
-        "src/buffer.c",
-        "src/markdown.c",
-        "src/stack.c",
+        "src/html/houdini_href_e.c",
+        "src/html/houdini_html_e.c",
+        "src/html/html.c",
+        "src/html/html_smartypants.c",
+        "src/snudown/autolink.c",
+        "src/snudown/buffer.c",
+        "src/snudown/markdown.c",
+        "src/snudown/stack.c",
     }) |file| {
         a.addCSourceFile(file, &[_][]const u8{"-fno-sanitize=undefined"});
     }
@@ -25,7 +25,7 @@ pub fn build(b: *Builder) void {
     lib.setBuildMode(mode);
     lib.setTarget(std.zig.CrossTarget.parse(.{ .arch_os_abi = "wasm32-freestanding" }) catch @panic("err"));
     addThings(lib);
-    lib.addCSourceFile("src/printf.c", &[_][]const u8{""});
+    lib.addCSourceFile("src/wasm/printf.c", &[_][]const u8{""});
     lib.install();
 
     var main_tests = b.addTest("src/entry_os.zig");

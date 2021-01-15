@@ -1,7 +1,9 @@
 // test.zig -lc -Isrc -Ihtml --verbose-cimport -cflags -fno-sanitize=undefined -- src/*.c html/*.c
 
 const std = @import("std");
-usingnamespace @import("html_entities.zig");
+comptime {
+    _ = @import("snudown/html_entities.zig");
+}
 
 const c = @cImport({
     @cInclude("markdown.h");
