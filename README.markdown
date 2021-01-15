@@ -6,12 +6,6 @@ Run Tests: https://pfg.pw/snudown/test
 
 snudown fork for wasm
 
-```
-zig test entry_os.zig -lc -Isrc -Ihtml -cflags -fno-sanitize=undefined -- src/*.c html/*.c
-
-zig build-lib -target wasm32-freestanding entry_wasm.zig -lc -Isrc -Ihtml -cflags -fno-sanitize=undefined -- src/*.c html/*.c printf.c
-```
-
 Also adds some features from new.reddit markdown parsing
 
 - adds code fence support
@@ -24,8 +18,8 @@ Markdown parser used by GitHub.
 ## Setup
 
 1. Install the latest master version of zig for your platform from the [downloads page](https://ziglang.org/download/) (this is the only dependency)
-2. Test `zig test entry_os.zig -lc -Isrc -Ihtml -cflags -fno-sanitize=undefined -- src/*.c html/*.c`
-3. Build entry_wasm.wasm `zig build-lib -target wasm32-freestanding entry_wasm.zig -lc -Isrc -Ihtml -cflags -fno-sanitize=undefined -- src/*.c html/*.c printf.c`
+2. Test `zig build test`
+3. Build entry_wasm.wasm `zig build -Drelease-small` (the result is in `zig-cache/lib/entry_wasm.wasm`)
 4. Run a local webserver (eg `php -S .` or `serve .` or something) and navigate to `/demo.html` or `/test.html`
 
 ## Thanks
