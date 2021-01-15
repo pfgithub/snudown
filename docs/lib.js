@@ -30,7 +30,9 @@ async function markdownToHTML(markdown) {
         return escapeHTML("Error "+e.toString()+"\n"+e.stack);
     }
 }
-WebAssembly.instantiateStreaming(fetch("entry_wasm.wasm"), {
+fetch("entry_wasm.wasm")
+.then(v => v.arrayBuffer())
+.then(ab => WebAssembly.instantiate(ab, {
     env: {
         __assert_fail: (assertion, file, line, fn) => {
             console.log(assertion, file, line, fn);
@@ -52,7 +54,7 @@ WebAssembly.instantiateStreaming(fetch("entry_wasm.wasm"), {
             throw new Error("Panic: "+ dec.decode(new Uint8Array(gmem.buffer, text, len)));
         }
     },
-}).then(obj => {
+})).then(obj => {
     gmem = obj.instance.exports.memory;
     global_obj = obj;
     on_obj_ready.forEach(v => v());
