@@ -91,19 +91,13 @@ export fn realloc(ptr_opt: ?[*]align(@alignOf(c_int)) u8, size: usize) ?[*]align
     const start_ptr = ptr - @sizeOf(MallocHeader);
     const mloc_h = @ptrCast(*MallocHeader, start_ptr);
     if (mloc_h.magic != 0xABCDEF) @panic("bad malloc header");
-    debugprint("Original malloc header: {x} {x}", .{ mloc_h.magic, mloc_h.size });
-    debugprint("Start ptr: {}. [0]: {}, [1]: {}, [2]: {}", .{ start_ptr, start_ptr[0], start_ptr[1], start_ptr[2] });
 
     const total_area = start_ptr[0 .. mloc_h.size + @sizeOf(MallocHeader)];
     const realloc_result = alloc.realloc(total_area, size + @sizeOf(MallocHeader)) catch return null;
-    debugprint("Realloc ptr: {}. [0]: {}, [1]: {}, [2]: {}", .{ start_ptr, realloc_result[0], realloc_result[1], realloc_result[2] });
 
     const new_mloc_h = @ptrCast(*MallocHeader, realloc_result.ptr);
-    debugprint("Copied malloc header: {x} {x}", .{ new_mloc_h.magic, new_mloc_h.size });
     if (new_mloc_h.magic != 0xABCDEF) @panic("bad copied malloc header");
     new_mloc_h.size = size;
-
-    debugprint("reallocating {}[0..{}] → {}[0..{}] :: ", .{ total_area.ptr, total_area.len, realloc_result.ptr, realloc_result.len });
 
     return realloc_result.ptr + @sizeOf(MallocHeader);
 }
@@ -117,7 +111,6 @@ export fn free(ptr_opt: ?[*]align(@alignOf(c_int)) u8) void {
     if (mloc_h.magic != 0xABCDEF) @panic("bad malloc header");
 
     const total_area = start_ptr[0 .. mloc_h.size + @sizeOf(MallocHeader)];
-    debugprint("freeing {}[0..{}] :: ", .{ total_area.ptr, total_area.len });
     alloc.free(total_area);
 }
 

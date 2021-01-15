@@ -59,7 +59,6 @@ pub fn parse(alloc: *std.mem.Allocator, inmd: [:0]const u8) [:0]u8 {
     const dupeval = if (ob.size == 0) "" else ob.data[0..ob.size];
 
     const res = alloc.dupeZ(u8, dupeval) catch @panic("oom");
-    debugprint("Reached {}", .{@src().line});
     return res;
 }
 

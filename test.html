@@ -6,9 +6,8 @@
     <title>Document</title>
 </head>
 <body>
+    <script src="lib.js"></script>
     <script>
-        const enc = new TextEncoder();
-        const dec = new TextDecoder();
         const tests = [
             ["", ""],
             [" ", ""],
@@ -152,18 +151,6 @@
             ["```javascript\nimport leftpad from \"left-pad\";\n```", "<pre><code class=\"md-code-language-javascript\">import leftpad from &quot;left-pad&quot;;\n</code></pre>\n"],
         ];
 
-        window.el = (nme) => document.createElement(nme);
-        window.txt = (txt) => document.createTextNode(txt);
-        window.anychange = (itms, cb) => (itms.forEach(itm => itm.oninput = () => cb()), cb());
-        window.body = document.getElementById("maincontent") ?? document.body;
-        Node.prototype.attr = function (atrs) { Object.entries(atrs).forEach(([k, v]) => this.setAttribute(k, v)); return this; };
-        Node.prototype.adto = function (prnt) { prnt.appendChild(this); return this; };
-        Node.prototype.adch = function (chld) { this.appendChild(chld); return this; };
-        Node.prototype.atxt = function (txta) { this.appendChild(txt(txta)); return this; };
-        Node.prototype.onev = function (evnm, cb) { this.addEventListener(evnm, cb); return this; };
-        Node.prototype.drmv = function (defer) { defer(() => this.remove()); return this; };
-        Node.prototype.clss = function (clss) { clss.split(".").filter(q => q).map(itm => this.classList.add(itm)); return this; };
-
         const finalres = el("h2").adto(body);
 
         const testels = [];
@@ -183,60 +170,19 @@
             testels.push({actualout, progressi, testel, summary});
         }
 
-        let gmem;
-        WebAssembly.instantiateStreaming(fetch("entry_wasm.wasm"), {
-            env: {
-                __assert_fail: (assertion, file, line, fn) => {
-                    console.log(assertion, file, line, fn);
-                    throw new Error("assert failed");
-                },
-                __stack_chk_fail: () => {
-                    throw new Error("stack overflow");
-                },
-                debugprints: (text, len) => {
-                    console.log("print text:",dec.decode(new Uint8Array(gmem.buffer, text, len)));
-                },
-                debugprinti: (intv) => {
-                    console.log("print int:", intv);
-                },
-                debugprintc: (intv) => {
-                    console.log("print char:", String.fromCodePoint(intv));
-                },
-                debugpanic: (text, len) => {
-                    throw new Error("Panic: "+ dec.decode(new Uint8Array(gmem.buffer, text, len)));
-                }
-            },
-        }).then(obj => {
-            gmem = obj.instance.exports.memory;
-            const markdownToHTML = (markdown) => {
-                try{
-                    const utf8 = enc.encode(markdown);
-                    const strptr = obj.instance.exports.allocString(utf8.byteLength);
-                    const inmem = new Uint8Array(obj.instance.exports.memory.buffer, strptr, utf8.byteLength);
-                    inmem.set(utf8);
-                    const res = obj.instance.exports.markdownToHTML(strptr, utf8.byteLength);
-                    const outlen = obj.instance.exports.strlen(res);
-                    const outarr = new Uint8Array(obj.instance.exports.memory.buffer, res, outlen);
-                    const decoded = dec.decode(outarr);
-                    obj.instance.exports.freeText(strptr, utf8.byteLength);
-                    obj.instance.exports.freeText(res, outlen);
-                    return decoded;
-                }catch(e){
-                    console.log(e.toString() + "\n" + e.stack);
-                    return "Error "+e.toString()+"\n"+e.stack;
-                }
-            };
-
+        (async () => {
             let testsfailed = 0;
-            tests.forEach(([testin, testout], i) => {
+
+            for(let i = 0; i < tests.length; i++) {
+                const [testin, testout] = tests[i];
                 let got1;
                 let got2;
                 if(true) {
                     testels[i].progressi.nodeValue = "…";
                     testels[i].actualout.nodeValue = "…Running…";
                     // console.log("Testing", {testin, testout});
-                    got1 = markdownToHTML(testin);
-                    got2 = markdownToHTML(testin);
+                    got1 = await markdownToHTML(testin);
+                    got2 = await markdownToHTML(testin);
                 }else{
                     got1 = "Not Run Yet";
                     got2 = "Not Run Yet";
@@ -253,13 +199,11 @@
                     testsfailed++;
                     // throw new Error("stop");
                 }
-            })
+            }
+            
             if(testsfailed > 0) finalres.atxt("Failed "+testsfailed+" test(s)");
             console.clear();
-
-        }).catch(e => {
-            console.log(e.toString(), e.stack);
-        });
+        })().then(() => console.log("Done")).catch(e => console.log(e));
     </script>
 </body>
 </html>

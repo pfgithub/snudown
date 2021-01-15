@@ -1,4 +1,10 @@
-﻿snudown fork for wasm
+﻿Demo:
+
+Interactive: https://pfg.pw/snudown/demo
+
+Run Tests: https://pfg.pw/snudown/test
+
+snudown fork for wasm
 
 ```
 zig test entry_os.zig -lc -Isrc -Ihtml -cflags -fno-sanitize=undefined -- src/*.c html/*.c

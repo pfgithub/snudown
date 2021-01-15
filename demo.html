@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script src="lib.js"></script>
+    <script>
+        const markdown_in = el("textarea").adto(body);
+        const outnode = el("div").adto(body);
+
+        let waiting = false;
+        const update = () => {
+            console.log("Update!");
+            if(waiting) return; // whatever
+            console.log("Now!");
+            waiting = true;
+            markdownToHTML(markdown_in.value).then(res => {
+                waiting = false;
+                outnode.innerHTML = res;
+            }).catch(e => {
+                waiting = false;
+                alert("Error! "+e.toString());
+            });
+        };
+
+        markdown_in.onev("input", () => update());
+        update();
+    </script>
+</body>
+</html>
