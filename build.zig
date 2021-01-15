@@ -14,7 +14,6 @@ fn addThings(a: anytype) void {
         "src/buffer.c",
         "src/markdown.c",
         "src/stack.c",
-        "printf.c",
     }) |file| {
         a.addCSourceFile(file, &[_][]const u8{"-fno-sanitize=undefined"});
     }
@@ -22,13 +21,14 @@ fn addThings(a: anytype) void {
 
 pub fn build(b: *Builder) void {
     const mode = b.standardReleaseOptions();
-    const lib = b.addStaticLibrary("entry_wasm", "entry_wasm.zig");
+    const lib = b.addStaticLibrary("entry_wasm", "src/entry_wasm.zig");
     lib.setBuildMode(mode);
     lib.setTarget(std.zig.CrossTarget.parse(.{ .arch_os_abi = "wasm32-freestanding" }) catch @panic("err"));
     addThings(lib);
+    lib.addCSourceFile("src/printf.c", &[_][]const u8{""});
     lib.install();
 
-    var main_tests = b.addTest("entry_os.zig");
+    var main_tests = b.addTest("src/entry_os.zig");
     addThings(main_tests);
     main_tests.setBuildMode(mode);
 

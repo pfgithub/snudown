@@ -19,8 +19,8 @@ Markdown parser used by GitHub.
 
 1. Install the latest master version of zig for your platform from the [downloads page](https://ziglang.org/download/) (this is the only dependency)
 2. Test `zig build test`
-3. Build entry_wasm.wasm `zig build -Drelease-small` (the result is in `zig-cache/lib/entry_wasm.wasm`)
-4. Run a local webserver (eg `php -S .` or `serve .` or something) and navigate to `/demo.html` or `/test.html`
+3. Build entry_wasm.wasm `zig build -Drelease-small && cp zig-cache/lib/entry_wasm.wasm docs/entry_wasm.wasm`
+4. Run a local webserver (eg `php -S docs` or `serve docs` or something) and navigate to `/demo.html` or `/test.html`
 
 ## Thanks
 
