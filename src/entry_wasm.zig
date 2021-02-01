@@ -117,10 +117,13 @@ export fn free(ptr_opt: ?[*]align(@alignOf(c_int)) u8) void {
 const va_list = opaque {
     extern fn va_get_int(arg: *va_list) c_int;
 };
-export fn vsnprintf_zig(s: [*:0]u8, n: usize, format_in: [*:0]u8, arg: *va_list) c_int {
+
+const w = @import("wasm/vsnprintf_writer.zig");
+
+export fn vsnprintf_zig(s: [*]u8, n: usize, format_in: [*:0]u8, arg: *va_list) c_int {
     const format = std.mem.span(format_in);
     const out_ptr = s[0..n];
-    var fbs = std.io.fixedBufferStream(out_ptr);
+    var fbs = w.vsnprintfWriter(out_ptr);
     const out = fbs.writer();
 
     var read_char: usize = 0;
@@ -130,15 +133,15 @@ export fn vsnprintf_zig(s: [*:0]u8, n: usize, format_in: [*:0]u8, arg: *va_list)
             read_char += 1;
             if (format[read_char] == 'd') {
                 const int_to_write = arg.va_get_int();
-                out.print("{}", .{int_to_write}) catch @panic("too long");
+                out.print("{}", .{int_to_write}) catch unreachable;
                 continue;
             } else {
                 @panic("TODO");
             }
         }
-        out.writeByte(format[read_char]) catch @panic("too long");
+        out.writeByte(format[read_char]) catch unreachable;
     }
-    out.writeByte(0) catch @panic("too long");
+    out.writeByte(0) catch unreachable;
 
     return @intCast(c_int, fbs.pos - 1);
 }
